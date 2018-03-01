@@ -22,7 +22,7 @@
 # ---
 # ## Step 0: Load The Data
 
-# In[2]:
+# In[1]:
 
 
 # Load pickled data
@@ -69,7 +69,7 @@ print("y_test shape:", y_test.shape)
 
 # ### Provide a Basic Summary of the Data Set Using Python, Numpy and/or Pandas
 
-# In[3]:
+# In[2]:
 
 
 ### Replace each question mark with the appropriate value. 
@@ -91,6 +91,7 @@ image_shape = X_train[0].shape
 n_classes = len(set(y_train))
 
 print("Number of training examples =", n_train)
+print("Number of validation examples =", n_validation)
 print("Number of testing examples =", n_test)
 print("Image data shape =", image_shape)
 print("Number of classes =", n_classes)
@@ -104,7 +105,7 @@ print("Number of classes =", n_classes)
 # 
 # **NOTE:** It's recommended you start with something simple first. If you wish to do more, come back to it after you've completed the rest of the sections. It can be interesting to look at the distribution of classes in the training, validation and test set. Is the distribution the same? Are there more examples of some classes than others?
 
-# In[4]:
+# In[6]:
 
 
 ### Data exploration visualization code goes here.
@@ -134,6 +135,21 @@ for i in range(8):
     axs[i].set_title(str(y_train[index]) + " " + label_name)
 
 
+# In[5]:
+
+
+# histogram of label frequency
+import numpy as np
+hist, bins = np.histogram(y_train, bins=n_classes)
+width = 0.8 * (bins[1] - bins[0])
+center = (bins[:-1] + bins[1:]) / 2
+plt.bar(center, hist, align='center', width=width)
+plt.xlabel("Classes")
+plt.ylabel("Count")
+plt.title("Histogram of classes in training dataset")
+plt.show()
+
+
 # ----
 # 
 # ## Step 2: Design and Test a Model Architecture
@@ -161,7 +177,7 @@ for i in range(8):
 # 
 # Use the code cell (or multiple code cells, if necessary) to implement the first step of your project.
 
-# In[5]:
+# In[7]:
 
 
 ### Preprocess the data here. It is required to normalize the data. Other preprocessing steps could include 
@@ -178,7 +194,7 @@ print('RGB shape of training data:', X_train.shape)
 print('Grayscale shape of training data:', X_train_gry.shape)
 
 
-# In[6]:
+# In[8]:
 
 
 ## Normalize the datasets to (-1,1)
@@ -189,7 +205,7 @@ X_valid_normal = (X_valid_gry - 128)/128
 print("Mean of the training datasets:", np.mean(X_train_normal))
 
 
-# In[7]:
+# In[9]:
 
 
 # show grayscale image of 10 random data points
@@ -210,7 +226,7 @@ for i in range(8):
 
 # ![lenet](./lenet.png)
 
-# In[8]:
+# In[10]:
 
 
 ### Define your architecture here.
@@ -291,7 +307,7 @@ def LeNet(img_input):
 # A validation set can be used to assess how well the model is performing. A low accuracy on the training and validation
 # sets imply underfitting. A high accuracy on the training set but low accuracy on the validation set implies overfitting.
 
-# In[9]:
+# In[11]:
 
 
 ### Train your model here.
@@ -306,7 +322,7 @@ keep_prob = tf.placeholder(tf.float32, name = "keep_prob")
 one_hot_y = tf.one_hot(y, 43)
 
 
-# In[10]:
+# In[12]:
 
 
 rate = 0.0009
@@ -318,7 +334,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate = rate)
 training_operation = optimizer.minimize(loss_operation)
 
 
-# In[11]:
+# In[13]:
 
 
 EPOCHS = 60
@@ -339,7 +355,7 @@ def evaluate(X_data, y_data):
     return total_accuracy / num_examples
 
 
-# In[12]:
+# In[14]:
 
 
 from sklearn.utils import shuffle
@@ -360,9 +376,11 @@ with tf.Session() as sess:
             end = offset + BATCH_SIZE
             batch_x, batch_y = X_train[offset:end], y_train[offset:end]
             sess.run(training_operation, feed_dict={x: batch_x, y: batch_y, keep_prob: 0.50})
-            
+        
+        train_accuracy = evaluate(X_train, y_train)
         validation_accuracy = evaluate(X_validation, y_validation)
         print("EPOCH {} ...".format(i+1))
+        print("Train Accuracy = {:.3f}".format(train_accuracy))
         print("Validation Accuracy = {:.3f}".format(validation_accuracy))
         print()
         
@@ -370,7 +388,7 @@ with tf.Session() as sess:
     print("Model saved")
 
 
-# In[12]:
+# In[38]:
 
 
 with tf.Session() as sess:
@@ -391,7 +409,7 @@ with tf.Session() as sess:
 
 # ### Load and Output the Images
 
-# In[13]:
+# In[39]:
 
 
 ### Load the images and plot them here.
@@ -413,7 +431,7 @@ for i,filename in enumerate(os.listdir("my_sign_img")):
     images.append(img)
 
 
-# In[14]:
+# In[40]:
 
 
 # Grayscale and normalize
@@ -425,7 +443,7 @@ print("shape: ", my_images_normalized.shape)
 
 # ### Predict the Sign Type for Each Image
 
-# In[15]:
+# In[41]:
 
 
 ### Run the predictions here and use the model to output the prediction for each image.
@@ -446,7 +464,7 @@ print(prediction_label)
 
 # ### Analyze Performance
 
-# In[16]:
+# In[42]:
 
 
 ### Calculate the accuracy for these 5 new images. 
@@ -499,7 +517,7 @@ with tf.Session() as sess:
 # 
 # Looking just at the first row we get `[ 0.34763842,  0.24879643,  0.12789202]`, you can confirm these are the 3 largest probabilities in `a`. You'll also notice `[3, 0, 5]` are the corresponding indices.
 
-# In[17]:
+# In[43]:
 
 
 ### Print out the top five softmax probabilities for the predictions on the German traffic sign images found on the web. 
@@ -507,7 +525,7 @@ with tf.Session() as sess:
 
 # Plot the result
 softmax_logits = tf.nn.softmax(logits)
-TopK = tf.nn.top_k(softmax_logits, k=3)
+TopK = tf.nn.top_k(softmax_logits, k=5)
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
@@ -518,7 +536,7 @@ with tf.Session() as sess:
 print(TopK_res)
 
 
-# In[18]:
+# In[45]:
 
 
 # Plot the result
@@ -532,9 +550,9 @@ for i in range(10):
         axs[i].set_title("Prediction: %s" % label_name)
     else:
         bar_labels = [str(k) for k in TopK_res[1][i // 2]]
-        axs[i].bar(np.arange(3), TopK_res[0][i // 2])
+        axs[i].bar(np.arange(5), TopK_res[0][i // 2], align='center', width=0.7)
         axs[i].set_xticklabels(bar_labels)
-        axs[i].set_xticks(np.linspace(0,3,4))
+        axs[i].set_xticks(np.linspace(0,4,5))
         axs[i].set_ylabel("Softmax")
         axs[i].set_xlabel("Labels")
 
